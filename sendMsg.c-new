@@ -10,7 +10,7 @@
 
 extern MYSQL *mysql;
 
-const char *query_sql = "SELECT t.triggerid,FROM_UNIXTIME(t.lastchange),a.name,t.description,t.priority,t.state FROM triggers t, functions c, items b, hosts a WHERE t.triggerid=c.triggerid AND c.itemid=b.itemid AND b.hostid=a.hostid and NOT EXISTS (SELECT NULL FROM functions f,items i,hosts h WHERE t.triggerid=f.triggerid AND f.itemid=i.itemid AND i.hostid=h.hostid AND (i.status<>0 OR h.status<>0)) AND t.status=0 AND t.value='1' AND t.flags IN ('0','4') ORDER BY t.lastchange asc;";
+const char *query_sql = "SELECT t.triggerid,FROM_UNIXTIME(t.lastchange),a.name,t.description,t.priority,t.state FROM triggers t, functions c, items b, hosts a WHERE t.triggerid=c.triggerid AND c.itemid=b.itemid AND b.hostid=a.hostid and NOT EXISTS (SELECT NULL FROM functions f,items i,hosts h WHERE t.triggerid=f.triggerid AND f.itemid=i.itemid AND i.hostid=h.hostid AND (i.status<>0 OR h.status<>0)) AND t.status=0 AND t.value='1' AND t.flags IN ('0','4') ORDER BY t.lastchange desc;";
 
 int total_count = 0;
 char triggerid[MAX_COUNT][32];
@@ -51,8 +51,8 @@ int send_data_to_server()
   char before_host_name[1024] = {0};
   
   //clear table
-  sprintf(data_to_send, "%20ustart", 5);
-  if (0>=send_sock(data_to_send, BUFFER_HEAD_LEN+5))
+  sprintf(data_to_send, "%20u", 0);
+  if (0>=send_sock(data_to_send, BUFFER_HEAD_LEN))
   {
       nRet = -1;
   }
@@ -77,11 +77,6 @@ int send_data_to_server()
      {
         nRet = -1;
      }
-  }
-  sprintf(data_to_send, "%20uend", 3);
-  if (0>=send_sock(data_to_send, BUFFER_HEAD_LEN+3))
-  {
-      nRet = -1;
   }
   return nRet;
 }
