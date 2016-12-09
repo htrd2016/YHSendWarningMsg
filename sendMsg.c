@@ -19,6 +19,15 @@ char description[MAX_COUNT][1024];
 char lastchange[MAX_COUNT][32];
 char priority[MAX_COUNT][20];
 
+int restart_myself(char **argv)
+{
+    if (execv(argv[0], argv)) {
+        /* ERROR, handle this yourself */
+        return -1;
+    }
+    return 0;
+}
+
 void init_list()
 {
   total_count = 0;
@@ -158,6 +167,8 @@ int main(int argc, char ** argv)
 
   int time_interval = 5;
   int tmp = 0;
+
+  int error_time = 0;
  
   if(argc<9)
   {
@@ -181,11 +192,19 @@ int main(int argc, char ** argv)
 
   for (;;)
   {
+    if(error_time>10)
+    {
+      restart_myself(argv);
+      printf("restart process\n");
+      return 0;
+    }
+
     if (0!=connect_db(mysql_ip, mysql_port, mysql_db, mysql_username, mysql_pass))
     {
         printf("connect mysql faild: server=%s,port=%d,username=%s,database=%s failed(%s)\n",
             mysql_ip, mysql_port, mysql_username, mysql_db, strerror(errno));
         sleep(time_interval);
+        error_time++;
         continue;
     }
 
@@ -194,6 +213,7 @@ int main(int argc, char ** argv)
        printf("connect socket failed: server:%s, port:%d\n", server_ip, server_port);
        disconnect_db();
        sleep(time_interval);
+       error_time++;
        continue;
     }
     printf("---------------\n");
@@ -203,6 +223,7 @@ int main(int argc, char ** argv)
        if(tmp < 0)
        {
           sleep(time_interval);
+          error_time++;
           break;
        } 
        else if(tmp == 1)
@@ -211,6 +232,7 @@ int main(int argc, char ** argv)
          {
             total_count = -1;
             sleep(time_interval);
+            error_time++;
             break;
          }
        }
